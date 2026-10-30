@@ -46,7 +46,7 @@ export default Plugin.define({
   id: "opencode-egm",
   async setup(ctx) {
     const vendorRoot =
-      process.env.EGM_PACKAGE_ROOT ?? fileURLToPath(new URL("..", import.meta.url));
+      process.env.EGM_PACKAGE_ROOT ?? fileURLToPath(new URL("../vendor", import.meta.url));
     const optionValue = (ctx.options as { model?: unknown }).model;
     const model = optionValue === undefined ? undefined : parseModelRef(optionValue as string);
     const disposals: Disposable[] = [];
