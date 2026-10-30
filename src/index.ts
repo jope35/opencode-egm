@@ -48,7 +48,16 @@ export default Plugin.define({
     const vendorRoot =
       process.env.EGM_PACKAGE_ROOT ?? fileURLToPath(new URL("../vendor", import.meta.url));
     const optionValue = (ctx.options as { model?: unknown }).model;
-    const model = optionValue === undefined ? undefined : parseModelRef(optionValue as string);
+    let model: ReturnType<typeof parseModelRef> | undefined;
+    if (optionValue !== undefined) {
+      try {
+        model = parseModelRef(optionValue as string);
+      } catch (error) {
+        // A thrown setup error is swallowed by the server; log it so a typo is visible.
+        console.error(`opencode-egm: ${error instanceof Error ? error.message : error}`);
+        throw error;
+      }
+    }
     const disposals: Disposable[] = [];
 
     const skillEntries = (await readdir(join(vendorRoot, "skills"), { withFileTypes: true }))
@@ -130,7 +139,12 @@ export default Plugin.define({
             const session = await ctx.session.get({ sessionID: input.sessionID });
             agentID = session.agent === undefined ? undefined : String(session.agent);
           } catch {
-            agentID = undefined;
+            // The persona is unknown. Deny the side-effect actions rather than fail open.
+            if (READ_ONLY_ACTIONS.includes(input.action)) {
+              input.effect = "deny";
+              input.message = `EGM: could not resolve the agent for this session; ${input.action} is denied.`;
+            }
+            return;
           }
         }
 

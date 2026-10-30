@@ -70,4 +70,9 @@ describe("parseFrontmatter", () => {
     expect(data.name).toBe("egm-resolve");
     expect(body).toBe("Body.");
   });
+
+  test("throws instead of registering a folded-block indicator", () => {
+    const input = "---\ndescription: >-\n  Foo\n bad-indent\n---\nBody.";
+    expect(() => parseFrontmatter(input)).toThrow(/YAML/);
+  });
 });

@@ -38,6 +38,9 @@ function parseYaml(yaml: string): unknown {
       const match = /^([A-Za-z0-9_-]+):\s+(.*)$/.exec(line);
       if (!match) continue;
       const [, key, raw] = match;
+      if (/^[>|][+-]?$/.test(raw)) {
+        throw new TypeError("frontmatter is not valid YAML");
+      }
       data[key] = raw === "true" ? true : raw === "false" ? false : raw;
     }
     return data;

@@ -260,10 +260,20 @@ describe("options.model", () => {
     }
   });
 
-  test("rejects a malformed model during setup", async () => {
-    await expect(runSetup({ model: "not-a-model" })).rejects.toThrow(/model/i);
-    await expect(runSetup({ model: "anthropic/" })).rejects.toThrow(/model/i);
-    await expect(runSetup({ model: "anthropic/x#" })).rejects.toThrow(/model/i);
+  test("rejects a malformed model during setup with a visible diagnostic", async () => {
+    const messages: string[] = [];
+    const original = console.error;
+    console.error = (...args: unknown[]) => {
+      messages.push(args.map(String).join(" "));
+    };
+    try {
+      await expect(runSetup({ model: "not-a-model" })).rejects.toThrow(/model/i);
+      await expect(runSetup({ model: "anthropic/" })).rejects.toThrow(/model/i);
+      await expect(runSetup({ model: "anthropic/x#" })).rejects.toThrow(/model/i);
+    } finally {
+      console.error = original;
+    }
+    expect(messages.join("\n")).toContain('invalid plugin option "model"');
   });
 });
 
@@ -305,5 +315,12 @@ describe("permission hook", () => {
     const input = { sessionID: "s-build", agent: "build", action: "edit", resources: ["*"], effect: "allow" };
     await calls.hook!(input);
     expect(input.effect).toBe("allow");
+  });
+
+  test("denies rather than fails open when the session cannot be resolved", async () => {
+    const { calls } = await runSetup({}, {});
+    const input = { sessionID: "missing", action: "edit", resources: ["*"], effect: "allow" };
+    await calls.hook!(input);
+    expect(input.effect).toBe("deny");
   });
 });
