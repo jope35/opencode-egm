@@ -1,0 +1,153 @@
+diff --git a/skills/egm-bootstrap/SKILL.md b/skills/egm-bootstrap/SKILL.md
+index 8ca24f7..92444ff 100644
+--- a/skills/egm-bootstrap/SKILL.md
++++ b/skills/egm-bootstrap/SKILL.md
+@@ -7,8 +7,7 @@ description: Bootstrap directory README.md files across a repository subtree.
+ 
+ # EGM Peanuts and Hay Bootstrap (`egm-bootstrap`)
+ 
+-When running in Codex or ChatGPT Work, first read [Codex integration](../../docs/codex.md).
+-In Claude Code or Cowork, read `${CLAUDE_PLUGIN_ROOT}/docs/claude.md` first.
++In OpenCode, read `../../docs/opencode.md` first.
+ 
+ ## Overview
+ 
+@@ -26,10 +25,9 @@ assistants.
+ ## Delegation
+ 
+ A Goldfish runs in a fresh context with no conversation history. Spawn each
+-subagent with your harness's subagent tool (Antigravity: `invoke_subagent`; Claude Code: `Agent`; Codex: `spawn_agent`). Each subagent is defined in `agents/<file>.md`, and its
+-frontmatter `name` (for example `egm-zoom-out`) is the subagent type to request
+-where your harness registers named subagents. Otherwise spawn a general-purpose
+-subagent and tell it to read that persona file first. Pass the prompt verbatim
++subagent with OpenCode's `subagent` tool, and pass the `egm-*` persona ID as its
++`agent` parameter (for example `agent: "egm-zoom-out"`). Each persona is defined in `agents/<file>.md`, and its
++frontmatter `name` is the persona ID to request. Pass the prompt verbatim
+ and wait for the report. If your harness cannot nest subagents,
+ use direct dispatch instead of the synthesizer. See `docs/harnesses.md`.
+ If your harness has no subagent tool, run the scout steps inline.
+diff --git a/skills/egm-brainstorm/SKILL.md b/skills/egm-brainstorm/SKILL.md
+index b2772c7..ea4649f 100644
+--- a/skills/egm-brainstorm/SKILL.md
++++ b/skills/egm-brainstorm/SKILL.md
+@@ -12,8 +12,7 @@ description: >-
+ 
+ # EGM Brainstorm: Interactive Multi-Lens Ideation & Refinement
+ 
+-When running in Codex or ChatGPT Work, first read [Codex integration](../../docs/codex.md).
+-In Claude Code or Cowork, read `${CLAUDE_PLUGIN_ROOT}/docs/claude.md` first.
++In OpenCode, read `../../docs/opencode.md` first.
+ 
+ ## Overview
+ 
+@@ -27,10 +26,9 @@ peers.
+ ## Delegation
+ 
+ A Goldfish runs in a fresh context with no conversation history. Spawn each
+-subagent with your harness's subagent tool (Antigravity: `invoke_subagent`; Claude Code: `Agent`; Codex: `spawn_agent`). Each subagent is defined in `agents/<file>.md`, and its
+-frontmatter `name` (for example `egm-zoom-out`) is the subagent type to request
+-where your harness registers named subagents. Otherwise spawn a general-purpose
+-subagent and tell it to read that persona file first. Pass the prompt verbatim
++subagent with OpenCode's `subagent` tool, and pass the `egm-*` persona ID as its
++`agent` parameter (for example `agent: "egm-zoom-out"`). Each persona is defined in `agents/<file>.md`, and its
++frontmatter `name` is the persona ID to request. Pass the prompt verbatim
+ and wait for the report. If your harness cannot nest subagents,
+ use direct dispatch instead of the synthesizer. See `docs/harnesses.md`.
+ If your harness has no subagent tool, stop and tell the user: a review in the same context is not a Goldfish review.
+diff --git a/skills/egm-draft/SKILL.md b/skills/egm-draft/SKILL.md
+index b6065cc..84bc7c4 100644
+--- a/skills/egm-draft/SKILL.md
++++ b/skills/egm-draft/SKILL.md
+@@ -11,8 +11,7 @@ description: >-
+ 
+ # Design Drafting (Document Construction)
+ 
+-When running in Codex or ChatGPT Work, first read [Codex integration](../../docs/codex.md).
+-In Claude Code or Cowork, read `${CLAUDE_PLUGIN_ROOT}/docs/claude.md` first.
++In OpenCode, read `../../docs/opencode.md` first.
+ 
+ This skill guides the user through drafting a technical design document based on
+ the aligned problem and requirements from the brainstorm phase.
+diff --git a/skills/egm-drift-report/SKILL.md b/skills/egm-drift-report/SKILL.md
+index 1947221..656105a 100644
+--- a/skills/egm-drift-report/SKILL.md
++++ b/skills/egm-drift-report/SKILL.md
+@@ -11,8 +11,7 @@ description: >-
+ 
+ # Detect Drift In Designs and Code
+ 
+-When running in Codex or ChatGPT Work, first read [Codex integration](../../docs/codex.md).
+-In Claude Code or Cowork, read `${CLAUDE_PLUGIN_ROOT}/docs/claude.md` first.
++In OpenCode, read `../../docs/opencode.md` first.
+ 
+ When the user asks to detect drift across all designs or a set of READMEs, the
+ goal is to identify all instances where the codebase has diverged or failed to
+diff --git a/skills/egm-resolve/SKILL.md b/skills/egm-resolve/SKILL.md
+index f762263..293f823 100644
+--- a/skills/egm-resolve/SKILL.md
++++ b/skills/egm-resolve/SKILL.md
+@@ -11,8 +11,7 @@ description: >-
+ 
+ # Goldfish Review: Resolve
+ 
+-When running in Codex or ChatGPT Work, first read [Codex integration](../../docs/codex.md).
+-In Claude Code or Cowork, read `${CLAUDE_PLUGIN_ROOT}/docs/claude.md` first.
++In OpenCode, read `../../docs/opencode.md` first.
+ 
+ ## Overview
+ 
+diff --git a/skills/egm-review-loop/SKILL.md b/skills/egm-review-loop/SKILL.md
+index c08cbfe..41f742f 100644
+--- a/skills/egm-review-loop/SKILL.md
++++ b/skills/egm-review-loop/SKILL.md
+@@ -13,8 +13,7 @@ description: >-
+ 
+ # Goldfish Review: Loop (Orchestration Driver)
+ 
+-When running in Codex or ChatGPT Work, first read [Codex integration](../../docs/codex.md).
+-In Claude Code or Cowork, read `${CLAUDE_PLUGIN_ROOT}/docs/claude.md` first.
++In OpenCode, read `../../docs/opencode.md` first.
+ 
+ ## Overview
+ 
+@@ -34,10 +33,9 @@ with the Elephant context to resolve findings.
+ ## Delegation
+ 
+ A Goldfish runs in a fresh context with no conversation history. Spawn each
+-subagent with your harness's subagent tool (Antigravity: `invoke_subagent`; Claude Code: `Agent`; Codex: `spawn_agent`). Each subagent is defined in `agents/<file>.md`, and its
+-frontmatter `name` (for example `egm-zoom-out`) is the subagent type to request
+-where your harness registers named subagents. Otherwise spawn a general-purpose
+-subagent and tell it to read that persona file first. Pass the prompt verbatim
++subagent with OpenCode's `subagent` tool, and pass the `egm-*` persona ID as its
++`agent` parameter (for example `agent: "egm-zoom-out"`). Each persona is defined in `agents/<file>.md`, and its
++frontmatter `name` is the persona ID to request. Pass the prompt verbatim
+ and wait for the report. If your harness cannot nest subagents,
+ use direct dispatch instead of the synthesizer. See `docs/harnesses.md`.
+ If your harness has no subagent tool, stop and tell the user: a review in the same
+diff --git a/skills/egm-review/SKILL.md b/skills/egm-review/SKILL.md
+index e497822..88c7436 100644
+--- a/skills/egm-review/SKILL.md
++++ b/skills/egm-review/SKILL.md
+@@ -11,18 +11,16 @@ description: >-
+ 
+ # Review, Validation & Automated Remediation
+ 
+-When running in Codex or ChatGPT Work, first read [Codex integration](../../docs/codex.md).
+-In Claude Code or Cowork, read `${CLAUDE_PLUGIN_ROOT}/docs/claude.md` first.
++In OpenCode, read `../../docs/opencode.md` first.
+ 
+ Reviews and validates a design document through specialized reviewer personas.
+ 
+ ## Delegation
+ 
+ A Goldfish runs in a fresh context with no conversation history. Spawn each
+-subagent with your harness's subagent tool (Antigravity: `invoke_subagent`; Claude Code: `Agent`; Codex: `spawn_agent`). Each subagent is defined in `agents/<file>.md`, and its
+-frontmatter `name` (for example `egm-zoom-out`) is the subagent type to request
+-where your harness registers named subagents. Otherwise spawn a general-purpose
+-subagent and tell it to read that persona file first. Pass the prompt verbatim
++subagent with OpenCode's `subagent` tool, and pass the `egm-*` persona ID as its
++`agent` parameter (for example `agent: "egm-zoom-out"`). Each persona is defined in `agents/<file>.md`, and its
++frontmatter `name` is the persona ID to request. Pass the prompt verbatim
+ and wait for the report. If your harness cannot nest subagents,
+ use direct dispatch instead of the synthesizer. See `docs/harnesses.md`.
+ If your harness has no subagent tool, stop and tell the user: a review in the same context is not a Goldfish review.
