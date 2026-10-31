@@ -23,6 +23,10 @@ jobs:
 
   integration:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        opencode: ["2.2.4", "2.2.5"]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -31,9 +35,9 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.opencode/bin
-          key: opencode-${{ runner.os }}-2.2.4
+          key: opencode-${{ runner.os }}-${{ matrix.opencode }}
       - name: Install OpenCode
-        run: curl -fsSL https://opencode.ai/v2/install | bash -s -- --version 2.2.4 --no-modify-path
+        run: curl -fsSL https://opencode.ai/v2/install | bash -s -- --version ${{ matrix.opencode }} --no-modify-path
       - run: echo "OPENCODE_BIN=$HOME/.opencode/bin/opencode" >> "$GITHUB_ENV"
       - run: bun install --frozen-lockfile
       - run: bun test test/integration.test.ts
