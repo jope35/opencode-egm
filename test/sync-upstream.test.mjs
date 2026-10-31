@@ -10,6 +10,7 @@ import {
   UPSTREAM_SHA,
   assertHarnessNeutral,
 } from "../scripts/sync-upstream.mjs";
+import { buildContentPack } from "../scripts/lib/content-pack.mjs";
 
 const repoRoot = resolve(import.meta.dir, "..");
 const patchPath = join(repoRoot, "patches/opencode.patch");
@@ -66,6 +67,21 @@ describe("assertHarnessNeutral", () => {
 
 test("UPSTREAM_SHA is a full commit sha", () => {
   expect(UPSTREAM_SHA).toMatch(/^[0-9a-f]{40}$/);
+});
+
+test("fixture manifest matches the fixture content", async () => {
+  const rebuilt = JSON.parse(
+    JSON.stringify(
+      await buildContentPack(join(repoRoot, "test/fixture/vendor"), {
+        repo: "fixture",
+        sha: "fixture",
+      }),
+    ),
+  );
+  const committed = JSON.parse(
+    await readFile(join(repoRoot, "test/fixture/vendor/manifest.json"), "utf8"),
+  );
+  expect(rebuilt).toEqual(committed);
 });
 
 describe("opencode.patch", () => {

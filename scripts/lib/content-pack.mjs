@@ -53,10 +53,12 @@ export async function buildContentPack(root, { repo, sha }) {
   for (const file of await skillFiles(root)) {
     const bytes = await readFile(join(root, file));
     const { data, body } = parseFrontmatter(bytes.toString("utf8"), file);
-    const id = data.name === undefined ? posix(file).split("/")[1] : String(data.name);
+    if (typeof data.name !== "string" || data.name.length === 0) {
+      throw new Error(`${file}: skill frontmatter needs a non-empty "name"`);
+    }
     skills.push({
-      id,
-      name: String(data.name ?? id),
+      id: data.name,
+      name: data.name,
       description: typeof data.description === "string" ? data.description : undefined,
       file,
       autoinvoke: data["disable-model-invocation"] === true ? false : undefined,
