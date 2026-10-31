@@ -1,0 +1,35 @@
+{
+  "name": "opencode-egm",
+  "version": "0.1.0",
+  "description": "OpenCode plugin for the Elephant-Goldfish Model",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "vendor",
+    "docs/opencode.md",
+    "patches"
+  ],
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bunx tsc --noEmit",
+    "sync": "bun scripts/sync-upstream.mjs",
+    "verify": "bun test && bunx tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@opencode/plugin": "^2.2.4"
+  },
+  "devDependencies": {
+    "@opencode/client": "2.2.4",
+    "@opencode/plugin": "2.2.4",
+    "@types/bun": "1.4.3",
+    "@types/node": "^24",
+    "typescript": "^5.9.0"
+  },
+  "engines": {
+    "bun": ">=1.4.0"
+  }
+}
