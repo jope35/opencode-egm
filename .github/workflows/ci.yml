@@ -33,7 +33,7 @@ jobs:
           path: ~/.opencode/bin
           key: opencode-${{ runner.os }}-2.2.4
       - name: Install OpenCode
-        run: curl -fsSL https://opencode.ai/install | bash -s -- --version 2.2.4 --no-modify-path
+        run: curl -fsSL https://opencode.ai/v2/install | bash -s -- --version 2.2.4 --no-modify-path
       - run: echo "OPENCODE_BIN=$HOME/.opencode/bin/opencode" >> "$GITHUB_ENV"
       - run: bun install --frozen-lockfile
       - run: bun test test/integration.test.ts
