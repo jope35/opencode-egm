@@ -5,6 +5,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { openCodeBinary, parseModelRef, startServer } from "./helpers/server.ts";
+import { REVIEWER_DENY } from "../src/policy.ts";
 
 const repoRoot = resolve(import.meta.dir, "..");
 const designDoc = resolve(import.meta.dir, "fixture/design.md");
@@ -101,16 +102,7 @@ suite("e2e: Goldfish spawn", () => {
       const agents = (await client.agent.list()).data;
       const zoomOut = agents.find((agent) => agent.id === "egm-zoom-out");
       expect(zoomOut?.mode).toBe("subagent");
-      for (const action of [
-        "edit",
-        "shell",
-        "subagent",
-        "webfetch",
-        "websearch",
-        "browser",
-        "execute",
-        "experimental_image_generate",
-      ]) {
+      for (const action of REVIEWER_DENY) {
         expect(
           zoomOut?.permissions.some(
             (rule) => rule.action === action && rule.resource === "*" && rule.effect === "deny",

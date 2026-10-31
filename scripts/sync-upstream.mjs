@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeContentPack } from "./lib/content-pack.mjs";
 
 export const UPSTREAM_REPO = "google/elephant-goldfish-model";
 export const UPSTREAM_SHA = "403d8881d62022490637d740657b33f01e321ea8";
@@ -146,6 +147,9 @@ async function main() {
 
     await applyPatch(target, check ? "check" : "normal");
     await assertHarnessNeutral(join(target, "skills"));
+    await assertHarnessNeutral(join(target, "agents"));
+    await assertHarnessNeutral(join(target, "resources"));
+    await writeContentPack(target, { repo: UPSTREAM_REPO, sha: UPSTREAM_SHA });
 
     if (check) {
       const changes = await compareTrees(target, vendor);

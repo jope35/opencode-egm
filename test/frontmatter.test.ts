@@ -37,10 +37,17 @@ describe("parseFrontmatter", () => {
     expect(data.description).toBe("Write the design document and check it.");
   });
 
-  test("keeps a colon inside a description", () => {
-    const input = ["---", "description: Use this: now", "---", "Body."].join("\n");
+  test("keeps a quoted colon inside a description", () => {
+    const input = ['---', 'description: "Use this: now"', "---", "Body."].join("\n");
     const { data } = parseFrontmatter(input);
     expect(data.description).toBe("Use this: now");
+  });
+
+  test("rejects an unquoted colon and names the source", () => {
+    const input = ["---", "description: Use this: now", "---", "Body."].join("\n");
+    expect(() => parseFrontmatter(input, "egm-test/SKILL.md")).toThrow(
+      /invalid YAML in egm-test\/SKILL\.md/,
+    );
   });
 
   test("preserves CRLF in the body", () => {

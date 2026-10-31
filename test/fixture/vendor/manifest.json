@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "upstream": {
+    "repo": "fixture",
+    "sha": "fixture"
+  },
+  "counts": {
+    "skills": 7,
+    "personas": 9
+  },
+  "skills": [
+    {
+      "id": "egm-bootstrap",
+      "name": "egm-bootstrap",
+      "description": "Fixture skill for egm-bootstrap.",
+      "file": "skills/egm-bootstrap/SKILL.md",
+      "autoinvoke": false,
+      "sha256": "722b16dc016b0d7bb935577a931968ba23405308eb81dc0dfc3a960f7282932b",
+      "content": "\nIn OpenCode, read `{{VENDOR_ROOT}}/docs/opencode.md` first.\n\nUse {{VENDOR_ROOT}}/resources/document_standards/zoom-out-standard.md and {{VENDOR_ROOT}}/agents/comprehension.md.\nAlso {{VENDOR_ROOT}}/docs/harnesses.md, docs/designs/architecture.md and subagents/helper.md.\n"
+    },
+    {
+      "id": "egm-brainstorm",
+      "name": "egm-brainstorm",
+      "description": "Fixture skill for egm-brainstorm.",
+      "file": "skills/egm-brainstorm/SKILL.md",
+      "autoinvoke": false,
+      "sha256": "c687e493eaff499df704436b1c1d4553904fc7c14f282f7667c257dc36ded7f4",
+      "content": "\nIn OpenCode, read `{{VENDOR_ROOT}}/docs/opencode.md` first.\n\nUse {{VENDOR_ROOT}}/resources/document_standards/zoom-out-standard.md and {{VENDOR_ROOT}}/agents/comprehension.md.\nAlso {{VENDOR_ROOT}}/docs/harnesses.md, docs/designs/architecture.md and subagents/helper.md.\n"
+    },
+    {
+      "id": "egm-draft",
+      "name": "egm-draft",
+      "description": "Fixture skill for egm-draft.",
+      "file": "skills/egm-draft/SKILL.md",
+      "autoinvoke": false,
+      "sha256": "9c3651191fc4046f33cfc46e6754998b3dfff75ac9798f8789cf2e04f5de757b",
+      "content": "\nIn OpenCode, read `{{VENDOR_ROOT}}/docs/opencode.md` first.\n\nUse {{VENDOR_ROOT}}/resources/document_standards/zoom-out-standard.md and {{VENDOR_ROOT}}/agents/comprehension.md.\nAlso {{VENDOR_ROOT}}/docs/harnesses.md, docs/designs/architecture.md and subagents/helper.md.\n"
+    },
+    {
+      "id": "egm-drift-report",
+      "name": "egm-drift-report",
+      "description": "Fixture skill for egm-drift-report.",
+      "file": "skills/egm-drift-report/SKILL.md",
+      "autoinvoke": false,
+      "sha256": "8be27026c88220337fc7bbf18f1e1b8d520e862cf980df6c3ff607231e94859d",
+      "content": "\nIn OpenCode, read `{{VENDOR_ROOT}}/docs/opencode.md` first.\n\nUse {{VENDOR_ROOT}}/resources/document_standards/zoom-out-standard.md and {{VENDOR_ROOT}}/agents/comprehension.md.\nAlso {{VENDOR_ROOT}}/docs/harnesses.md, docs/designs/architecture.md and subagents/helper.md.\n"
+    },
+    {
+      "id": "egm-resolve",
+      "name": "egm-resolve",
+      "description": "Fixture skill for egm-resolve.",
+      "file": "skills/egm-resolve/SKILL.md",
+      "autoinvoke": false,
+      "sha256": "2fda4559cf7789cf19e560ea2c4ee9dbf9c46ebcc839bc16fb116975bca90c5e",
+      "content": "\nIn OpenCode, read `{{VENDOR_ROOT}}/docs/opencode.md` first.\n\nUse {{VENDOR_ROOT}}/resources/document_standards/zoom-out-standard.md and {{VENDOR_ROOT}}/agents/comprehension.md.\nAlso {{VENDOR_ROOT}}/docs/harnesses.md, docs/designs/architecture.md and subagents/helper.md.\n"
+    },
+    {
+      "id": "egm-review",
+      "name": "egm-review",
+      "description": "Fixture skill for egm-review.",
+      "file": "skills/egm-review/SKILL.md",
+      "autoinvoke": false,
+      "sha256": "6b058d3a9d097e7a33939c6096536c23cd193647f41d2edd923400e7a2ce1059",
+      "content": "\nIn OpenCode, read `{{VENDOR_ROOT}}/docs/opencode.md` first.\n\nUse {{VENDOR_ROOT}}/resources/document_standards/zoom-out-standard.md and {{VENDOR_ROOT}}/agents/comprehension.md.\nAlso {{VENDOR_ROOT}}/docs/harnesses.md, docs/designs/architecture.md and subagents/helper.md.\n"
+    },
+    {
+      "id": "egm-review-loop",
+      "name": "egm-review-loop",
+      "description": "Fixture skill for egm-review-loop.",
+      "file": "skills/egm-review-loop/SKILL.md",
+      "autoinvoke": false,
+      "sha256": "d588b44bdd36d66215c36943061a04bc7aaf238644aca62f1a89ecfdfc5d1ab8",
+      "content": "\nIn OpenCode, read `{{VENDOR_ROOT}}/docs/opencode.md` first.\n\nUse {{VENDOR_ROOT}}/resources/document_standards/zoom-out-standard.md and {{VENDOR_ROOT}}/agents/comprehension.md.\nAlso {{VENDOR_ROOT}}/docs/harnesses.md, docs/designs/architecture.md and subagents/helper.md.\n"
+    }
+  ],
+  "personas": [
+    {
+      "id": "egm-bootstrap-orchestrator",
+      "name": "egm-bootstrap-orchestrator",
+      "description": "Fixture persona egm-bootstrap-orchestrator.",
+      "file": "agents/bootstrap_orchestrator.md",
+      "sha256": "21c5e7b07d1a216d1f303f54c682ba31621014f19253d4c89f220568031e447e",
+      "system": "\nPersona body for egm-bootstrap-orchestrator.\n"
+    },
+    {
+      "id": "egm-codebase-details",
+      "name": "egm-codebase-details",
+      "description": "Fixture persona egm-codebase-details.",
+      "file": "agents/codebase_details.md",
+      "sha256": "1eb323a70df9a0a5a15d3413c1105f637d20ee3a5dfde568e51d0e6a6dc2f4a6",
+      "system": "\nPersona body for egm-codebase-details.\n"
+    },
+    {
+      "id": "egm-comprehension",
+      "name": "egm-comprehension",
+      "description": "Fixture persona egm-comprehension.",
+      "file": "agents/comprehension.md",
+      "sha256": "13b6544287cb554bc26167e800b73d69413b7387c777ae3989f239171620693f",
+      "system": "\nPersona body for egm-comprehension.\n"
+    },
+    {
+      "id": "egm-design",
+      "name": "egm-design",
+      "description": "Fixture persona egm-design.",
+      "file": "agents/design_critic.md",
+      "sha256": "b7cb386d723bfa2df3a21ad214a0b83c7691ea9cd5e4c8428f4f70090b2fe9fe",
+      "system": "\nPersona body for egm-design.\n"
+    },
+    {
+      "id": "egm-implementation-readiness",
+      "name": "egm-implementation-readiness",
+      "description": "Fixture persona egm-implementation-readiness.",
+      "file": "agents/implementation_readiness.md",
+      "sha256": "9855cadf9e7702c59907c9f77ea995d715f463974975422e193edffc2fd08833",
+      "system": "\nPersona body for egm-implementation-readiness.\n"
+    },
+    {
+      "id": "egm-structural",
+      "name": "egm-structural",
+      "description": "Fixture persona egm-structural.",
+      "file": "agents/structural.md",
+      "sha256": "ce5d92277c96c8191d96eb24b2424ebc7ec779726bee0278a25936bb13aa8493",
+      "system": "\nPersona body for egm-structural.\n"
+    },
+    {
+      "id": "egm-style",
+      "name": "egm-style",
+      "description": "Fixture persona egm-style.",
+      "file": "agents/style.md",
+      "sha256": "724e873f90c993e1c9165ce9e02d301f1063af531a6c522cd619e1c1aa8f48ae",
+      "system": "\nPersona body for egm-style.\n"
+    },
+    {
+      "id": "egm-synthesizer",
+      "name": "egm-synthesizer",
+      "description": "Fixture persona egm-synthesizer.",
+      "file": "agents/synthesizer.md",
+      "sha256": "7383130ce57836ec6db1aa85e4698712b5dbcfe319bdb7946718452167d8f30f",
+      "system": "\nPersona body for egm-synthesizer.\n"
+    },
+    {
+      "id": "egm-zoom-out",
+      "name": "egm-zoom-out",
+      "description": "Fixture persona egm-zoom-out.",
+      "file": "agents/zoom_out.md",
+      "sha256": "65ca89069e0ffd3d1ea657aaac8e1611afa65afb11ee32fa6c56dc7d018c748e",
+      "system": "\nPersona body for egm-zoom-out.\n\nRead {{VENDOR_ROOT}}/resources/document_standards/zoom-out-standard.md.\n"
+    }
+  ]
+}

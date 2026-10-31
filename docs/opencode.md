@@ -1,8 +1,8 @@
 # EGM on OpenCode
 
 This guide bridges the Elephant-Goldfish Model (EGM) text to OpenCode. The
-EGM skills in `skills/` are harness-neutral after the OpenCode patch. This
-file names the OpenCode tools they rely on.
+EGM skills in `<vendor>/skills/` are harness-neutral after the OpenCode
+patch. This file names the OpenCode tools they rely on.
 
 ## The `subagent` tool
 
@@ -29,7 +29,7 @@ subagent({
   the next step needs the report.
 - `model` overrides the persona model for that one spawn.
 
-Without a plugin-level `model` option, each persona inherits the parent
+Without a plugin-level model option, each persona inherits the parent
 session's model. To give every Goldfish a fixed model, register the plugin
 in object form:
 
@@ -44,8 +44,36 @@ in object form:
 }
 ```
 
-`options.model` accepts `provider/model` with an optional `#variant`. The
-plugin rejects a malformed value during setup.
+`options.model` accepts `provider/model` with an optional `#variant` and is
+the default for the nine EGM personas. `options.models` overrides one
+persona at a time (keys are persona IDs; `egm` sets the primary agent):
+
+```jsonc
+{
+  "options": {
+    "model": "anthropic/claude-sonnet-5-5",
+    "models": {
+      "egm-zoom-out": "openai/gpt-5",
+      "egm": "anthropic/claude-opus-4-5"
+    }
+  }
+}
+```
+
+The plugin rejects a malformed value or an unknown persona key during
+setup.
+
+## Review ledger
+
+Every EGM persona session that goes idle appends one JSON line to
+`.egm/review-ledger.jsonl` in the project directory. A record contains the
+parent session, persona, model, outcome, start and idle times, duration,
+token usage, cost, and the number of 🔴/🟡/🟢 finding markers in the
+session context. The Elephant session itself is recorded too.
+
+Set `"ledger": false` to disable it, or `"ledger": "path/to/file.jsonl"` to
+move it. The ledger is best-effort: a write failure is logged and never
+breaks a review.
 
 ## Nesting depth
 
@@ -54,9 +82,11 @@ defaults to 1. At depth 1 a child cannot spawn another child. Use direct
 dispatch: the Elephant session spawns each reviewer itself, one `subagent`
 call per persona and stage.
 
-`egm-synthesizer` and `egm-bootstrap-orchestrator` keep the `subagent`
-permission because they need nesting when the user raises the limit. They
-still cannot edit files or run shell commands.
+`egm-synthesizer` may spawn reviewer personas only. `egm-bootstrap-orchestrator`
+may spawn itself only. Any other target is denied, so an orchestrator cannot
+launder write access through a general-purpose agent. Bootstrap is a
+documented writer: it has `edit` and `shell` for READMEs and verification.
+The synthesizer stays read-only.
 
 A bootstrap tree with more than 5 directories needs the swarm path, and
 that path needs depth 2:
@@ -103,26 +133,44 @@ EGM artifact directory: .dev/docs
 
 OpenCode reads `AGENTS.md`, so the upstream rule works unchanged.
 
-## Paths in registered skill content
+## Paths in registered content
 
 The guide you are reading lives at `<vendor>/docs/opencode.md`. The vendor
-root is the parent of `docs/`. The plugin resolves it from the installed
-package, and every registered skill carries absolute vendor paths for
-`agents/` and `resources/` references. That is why a skill can tell a
-Goldfish to read `agents/comprehension.md` and the child finds the file
-even though its working directory is the project.
+root is the parent of `docs/`. `scripts/sync-upstream.mjs` parses every
+vendored skill and persona once and writes `vendor/manifest.json`. The
+manifest stores the body with a `{{VENDOR_ROOT}}` token for `agents/`,
+`resources/`, `docs/harnesses.md` and this guide. At setup the plugin
+replaces that token with the installed package path and registers the
+content directly: there is no YAML parser, directory scan or path rewrite
+at runtime.
 
-A registered skill also carries the absolute path to this guide. Read it
-first when a skill points you here.
+That is why a skill can tell a Goldfish to read `agents/comprehension.md`
+and the child finds the file even though its working directory is the
+project. Persona system prompts get the same treatment; a reviewer reading
+`resources/document_standards/zoom-out-standard.md` resolves it inside the
+package, not inside the user's project.
 
-## Read-only reviewers
+If the manifest is missing or does not contain the expected seven skills
+and nine personas, setup fails loudly. Run `bun run sync` after changing
+the vendored content.
 
-The seven reviewer personas deny `edit`, `shell`, `subagent`, `webfetch`,
-`websearch`, `browser`, `execute`, and `experimental_image_generate` on
-`*`. The plugin enforces this with a permission hook as well as agent
-rules, so a global allow-all rule cannot widen it. A reviewer reads the
-design document and writes its report into the session; it does not change
-the tree.
+## Reviewer and orchestrator capabilities
+
+Reviewers are read-only by capability, not by a deny list. The plugin's
+`evaluate` hook allows `read`, `glob`, `grep`, `skill`, `question` and
+`external_directory`; everything else is denied, including `edit`, `shell`,
+`subagent`, `webfetch`, `websearch`, `execute`, `experimental_image_generate`,
+and every MCP action (`<server>_<tool>`). A new action in a later OpenCode
+release is denied by default.
+
+Agent rules still carry the visible denies for the known side effects, so a
+global allow-all cannot widen them. A user's global **deny** remains final:
+the hook never turns a deny into an allow.
+
+The synthesizer is read-only and may spawn reviewer personas only. The
+bootstrap orchestrator is the one writer: it needs `edit` and `shell` for
+README files and verification, and may spawn only itself. It is not a
+reviewer, so it is not part of the read-only guarantee.
 
 ## The `egm` primary agent
 

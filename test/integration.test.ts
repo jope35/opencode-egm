@@ -5,32 +5,23 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { openCodeBinary, startServer } from "./helpers/server.ts";
+import {
+  BOOTSTRAP_ORCHESTRATOR_DENY,
+  BOOTSTRAP_ORCHESTRATOR_IDS,
+  ORCHESTRATOR_IDS,
+  REVIEWER_DENY,
+  REVIEWER_IDS,
+  SYNTHESIZER_DENY,
+  SYNTHESIZER_IDS,
+} from "../src/policy.ts";
 
 const repoRoot = resolve(import.meta.dir, "..");
 const vendorRoot = join(repoRoot, "vendor");
 const bin = openCodeBinary();
 const hasBinary = existsSync(bin);
 
-const REVIEWERS = [
-  "egm-zoom-out",
-  "egm-comprehension",
-  "egm-design",
-  "egm-structural",
-  "egm-style",
-  "egm-implementation-readiness",
-  "egm-codebase-details",
-];
-const ORCHESTRATORS = ["egm-synthesizer", "egm-bootstrap-orchestrator"];
-const READ_ONLY_ACTIONS = [
-  "edit",
-  "shell",
-  "subagent",
-  "webfetch",
-  "websearch",
-  "browser",
-  "execute",
-  "experimental_image_generate",
-];
+const REVIEWERS = REVIEWER_IDS;
+const ORCHESTRATORS = ORCHESTRATOR_IDS;
 const MARKERS = [
   "CLAUDE_PLUGIN_ROOT",
   "docs/codex.md",
@@ -114,11 +105,18 @@ suite("integration: installed OpenCode server", () => {
         expect(agent!.model ?? null).toBeNull();
       }
       for (const id of REVIEWERS) {
-        for (const action of READ_ONLY_ACTIONS) expect(hasDeny(byId.get(id)!, action)).toBe(true);
+        for (const action of REVIEWER_DENY) expect(hasDeny(byId.get(id)!, action)).toBe(true);
       }
-      for (const id of ORCHESTRATORS) {
-        expect(hasDeny(byId.get(id)!, "edit")).toBe(true);
-        expect(hasDeny(byId.get(id)!, "shell")).toBe(true);
+      for (const id of SYNTHESIZER_IDS) {
+        for (const action of SYNTHESIZER_DENY) expect(hasDeny(byId.get(id)!, action)).toBe(true);
+        expect(hasDeny(byId.get(id)!, "subagent")).toBe(false);
+      }
+      for (const id of BOOTSTRAP_ORCHESTRATOR_IDS) {
+        for (const action of BOOTSTRAP_ORCHESTRATOR_DENY) {
+          expect(hasDeny(byId.get(id)!, action)).toBe(true);
+        }
+        expect(hasDeny(byId.get(id)!, "edit")).toBe(false);
+        expect(hasDeny(byId.get(id)!, "shell")).toBe(false);
         expect(hasDeny(byId.get(id)!, "subagent")).toBe(false);
       }
       expect(byId.get("egm")?.mode).toBe("primary");
@@ -158,6 +156,34 @@ suite("integration: installed OpenCode server", () => {
   );
 
   test(
+    "applies per-persona models over the default",
+    async () => {
+      const dir = await makeProject({
+        plugins: [
+          {
+            package: repoRoot,
+            options: {
+              model: "anthropic/default",
+              models: { "egm-zoom-out": "openai/gpt-5" },
+            },
+          },
+        ],
+      });
+      const { client } = await boot(dir);
+      const agents = (await client.agent.list()).data;
+      expect(agents.find((agent) => agent.id === "egm-zoom-out")?.model).toMatchObject({
+        providerID: "openai",
+        id: "gpt-5",
+      });
+      expect(agents.find((agent) => agent.id === "egm-comprehension")?.model).toMatchObject({
+        providerID: "anthropic",
+        id: "default",
+      });
+    },
+    60_000,
+  );
+
+  test(
     "keeps the plugin deny rules under a global allow-all",
     async () => {
       const dir = await makeProject({
@@ -168,13 +194,19 @@ suite("integration: installed OpenCode server", () => {
       const agents = (await client.agent.list()).data;
       for (const id of REVIEWERS) {
         const agent = agents.find((candidate) => candidate.id === id)!;
-        for (const action of READ_ONLY_ACTIONS) expect(hasDeny(agent, action)).toBe(true);
+        for (const action of REVIEWER_DENY) expect(hasDeny(agent, action)).toBe(true);
       }
-      for (const id of ORCHESTRATORS) {
+      for (const id of SYNTHESIZER_IDS) {
         const agent = agents.find((candidate) => candidate.id === id)!;
-        expect(hasDeny(agent, "edit")).toBe(true);
-        expect(hasDeny(agent, "shell")).toBe(true);
+        for (const action of SYNTHESIZER_DENY) expect(hasDeny(agent, action)).toBe(true);
         expect(hasDeny(agent, "subagent")).toBe(false);
+      }
+      for (const id of BOOTSTRAP_ORCHESTRATOR_IDS) {
+        const agent = agents.find((candidate) => candidate.id === id)!;
+        for (const action of BOOTSTRAP_ORCHESTRATOR_DENY) {
+          expect(hasDeny(agent, action)).toBe(true);
+        }
+        expect(hasDeny(agent, "edit")).toBe(false);
       }
     },
     60_000,

@@ -1,33 +1,18 @@
-import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Plugin } from "@opencode/plugin";
 import type { Agent, Skill } from "@opencode/plugin";
-import { parseFrontmatter } from "./frontmatter.ts";
-import { parseModelRef } from "./model.ts";
-import { absolutizePackagePaths } from "./paths.ts";
-
-const REVIEWER_IDS = [
-  "egm-zoom-out",
-  "egm-comprehension",
-  "egm-design",
-  "egm-structural",
-  "egm-style",
-  "egm-implementation-readiness",
-  "egm-codebase-details",
-];
-const ORCHESTRATOR_IDS = ["egm-synthesizer", "egm-bootstrap-orchestrator"];
-const READ_ONLY_ACTIONS = [
-  "edit",
-  "shell",
-  "subagent",
-  "webfetch",
-  "websearch",
-  "browser",
-  "execute",
-  "experimental_image_generate",
-];
-const ORCHESTRATOR_DENY = ["edit", "shell"];
+import { appendLedger, countFindingMarkers, ledgerRecord } from "./ledger.ts";
+import { loadManifest, materialize } from "./manifest.ts";
+import { parseLedgerOption, parseModelRouting } from "./model.ts";
+import { normalizeRoot } from "./paths.ts";
+import {
+  PERSONA_IDS,
+  UNRESOLVED_ALLOW,
+  permissionRules,
+  policyFor,
+  subagentTargetsAllowed,
+} from "./policy.ts";
 
 const ELEPHANT_PROMPT = `You are the Elephant: the context-rich session of the Elephant-Goldfish Model (EGM).
 
@@ -42,126 +27,152 @@ interface Disposable {
   dispose: () => Promise<void>;
 }
 
+function describe(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export default Plugin.define({
   id: "opencode-egm",
   async setup(ctx) {
-    const vendorRoot =
-      process.env.EGM_PACKAGE_ROOT ?? fileURLToPath(new URL("../vendor", import.meta.url));
-    const optionValue = (ctx.options as { model?: unknown }).model;
-    let model: ReturnType<typeof parseModelRef> | undefined;
-    if (optionValue !== undefined) {
-      try {
-        model = parseModelRef(optionValue as string);
-      } catch (error) {
-        // A thrown setup error is swallowed by the server; log it so a typo is visible.
-        console.error(`opencode-egm: ${error instanceof Error ? error.message : error}`);
-        throw error;
-      }
-    }
     const disposals: Disposable[] = [];
-
-    const skillEntries = (await readdir(join(vendorRoot, "skills"), { withFileTypes: true }))
-      .filter((entry) => entry.isDirectory())
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    for (const entry of skillEntries) {
-      const id = entry.name;
-      const skillPath = join(vendorRoot, "skills", id, "SKILL.md");
-      let text: string;
-      try {
-        text = await readFile(skillPath, "utf8");
-      } catch {
-        continue;
+    const cleanup = async () => {
+      for (const disposable of disposals) {
+        try {
+          await disposable.dispose();
+        } catch (error) {
+          console.error(`opencode-egm: dispose failed: ${describe(error)}`);
+        }
       }
-      const { data, body } = parseFrontmatter(text);
-      disposals.push(
-        await ctx.skill.transform((editor) =>
-          editor.add({
-            id: id as Skill.Info["id"],
-            name: (typeof data.name === "string" ? data.name : id) as Skill.Info["name"],
-            description: typeof data.description === "string" ? data.description : undefined,
-            path: skillPath as Skill.Info["path"],
-            content: absolutizePackagePaths(body, vendorRoot),
-            autoinvoke: data["disable-model-invocation"] === true ? false : undefined,
-          }),
-        ),
+    };
+
+    try {
+      const vendorRoot =
+        process.env.EGM_PACKAGE_ROOT ?? fileURLToPath(new URL("../vendor", import.meta.url));
+      const contentRoot = normalizeRoot(vendorRoot);
+      const manifest = await loadManifest(vendorRoot);
+      const routing = parseModelRouting(ctx.options, [...PERSONA_IDS, "egm"]);
+      const ledgerPath = parseLedgerOption(
+        (ctx.options as { ledger?: unknown }).ledger,
+        String(ctx.location.directory),
       );
-    }
-    await ctx.skill.reload();
 
-    const agentEntries = (await readdir(join(vendorRoot, "agents")))
-      .filter((file) => file.endsWith(".md"))
-      .sort();
+      for (const skill of manifest.skills) {
+        disposals.push(
+          await ctx.skill.transform((editor) =>
+            editor.add({
+              id: skill.id as Skill.Info["id"],
+              name: skill.name as Skill.Info["name"],
+              description: skill.description,
+              path: join(vendorRoot, skill.file) as Skill.Info["path"],
+              content: materialize(skill.content, contentRoot),
+              autoinvoke: skill.autoinvoke,
+            }),
+          ),
+        );
+      }
+      await ctx.skill.reload();
 
-    for (const file of agentEntries) {
-      const { data, body } = parseFrontmatter(
-        await readFile(join(vendorRoot, "agents", file), "utf8"),
-      );
-      if (typeof data.name !== "string") continue;
-      const id = data.name;
-      const isReviewer = REVIEWER_IDS.includes(id);
-      const isOrchestrator = ORCHESTRATOR_IDS.includes(id);
-      if (!isReviewer && !isOrchestrator) continue;
+      for (const persona of manifest.personas) {
+        const policy = policyFor(persona.id);
+        if (!policy) {
+          throw new Error(`content manifest contains an unregistered persona "${persona.id}"`);
+        }
+        const model = routing.byAgent.get(persona.id) ?? routing.default;
+        disposals.push(
+          await ctx.agent.transform((editor) =>
+            editor.update(persona.id, (agent) => {
+              agent.description = persona.description ?? persona.id;
+              agent.mode = "subagent";
+              agent.system = materialize(persona.system, contentRoot);
+              agent.permissions = permissionRules(persona.id);
+              if (model) agent.model = model as Agent.Info["model"];
+            }),
+          ),
+        );
+      }
 
+      const egmModel = routing.byAgent.get("egm");
       disposals.push(
         await ctx.agent.transform((editor) =>
-          editor.update(id, (agent) => {
+          editor.update("egm", (agent) => {
             agent.description =
-              typeof data.description === "string" ? data.description : id;
-            agent.mode = "subagent";
-            agent.system = body;
-            agent.permissions = (isReviewer ? READ_ONLY_ACTIONS : ORCHESTRATOR_DENY).map(
-              (action) => ({ action, resource: "*", effect: "deny" as const }),
-            );
-            if (model) agent.model = model as Agent.Info["model"];
+              "Elephant session for the Elephant-Goldfish Model: design and review, no code.";
+            agent.mode = "primary";
+            agent.system = ELEPHANT_PROMPT;
+            if (egmModel) agent.model = egmModel as Agent.Info["model"];
           }),
         ),
       );
-    }
+      await ctx.agent.reload();
 
-    disposals.push(
-      await ctx.agent.transform((editor) =>
-        editor.update("egm", (agent) => {
-          agent.description =
-            "Elephant session for the Elephant-Goldfish Model: design and review, no code.";
-          agent.mode = "primary";
-          agent.system = ELEPHANT_PROMPT;
-        }),
-      ),
-    );
-    await ctx.agent.reload();
-
-    disposals.push(
-      await ctx.permission.hook("evaluate", async (input) => {
-        let agentID = input.agent === undefined ? undefined : String(input.agent);
-        if (agentID === undefined) {
-          try {
-            const session = await ctx.session.get({ sessionID: input.sessionID });
-            agentID = session.agent === undefined ? undefined : String(session.agent);
-          } catch {
-            // The persona is unknown. Deny the side-effect actions rather than fail open.
-            if (READ_ONLY_ACTIONS.includes(input.action)) {
-              input.effect = "deny";
-              input.message = `EGM: could not resolve the agent for this session; ${input.action} is denied.`;
+      disposals.push(
+        await ctx.permission.hook("evaluate", async (input) => {
+          let agentID = input.agent === undefined ? undefined : String(input.agent);
+          if (agentID === undefined) {
+            try {
+              const session = await ctx.session.get({ sessionID: input.sessionID });
+              agentID = session.agent === undefined ? undefined : String(session.agent);
+            } catch {
+              // A session we cannot identify gets no side effects. This is the
+              // fail-closed path for a transient session lookup failure.
+              if (!UNRESOLVED_ALLOW.has(input.action)) {
+                input.effect = "deny";
+                input.message = `EGM: could not resolve the agent for this session; ${input.action} is denied.`;
+              }
+              return;
             }
+          }
+
+          const policy = policyFor(agentID);
+          if (!policy) return;
+
+          if (!policy.allow.includes(input.action)) {
+            input.effect = "deny";
+            input.message = `EGM persona ${agentID} may not use ${input.action}.`;
             return;
           }
-        }
+          if (input.action === "subagent" && !subagentTargetsAllowed(policy, input.resources)) {
+            input.effect = "deny";
+            input.message = `EGM persona ${agentID} may only spawn: ${policy.subagentTargets.join(", ")}.`;
+          }
+        }),
+      );
 
-        const denied = REVIEWER_IDS.includes(agentID ?? "")
-          ? READ_ONLY_ACTIONS
-          : ORCHESTRATOR_IDS.includes(agentID ?? "")
-            ? ORCHESTRATOR_DENY
-            : undefined;
-        if (!denied || !denied.includes(input.action)) return;
+      if (ledgerPath) {
+        disposals.push(
+          await ctx.session.hook("experimental.idle", async (idle) => {
+            try {
+              const session = await ctx.session.get({ sessionID: idle.sessionID });
+              const agent = session.agent === undefined ? undefined : String(session.agent);
+              if (agent === undefined || (agent !== "egm" && !agent.startsWith("egm-"))) return;
 
-        input.effect = "deny";
-        input.message = `EGM persona ${agentID} is read-only: ${input.action} is denied.`;
-      }),
-    );
+              let findingMarkers: number | undefined;
+              if (agent !== "egm") {
+                try {
+                  const context = await ctx.session.context({ sessionID: idle.sessionID });
+                  findingMarkers = countFindingMarkers(JSON.stringify(context));
+                } catch {
+                  findingMarkers = undefined;
+                }
+              }
 
-    return async () => {
-      for (const disposable of disposals) await disposable.dispose();
-    };
+              await appendLedger(
+                ledgerPath,
+                ledgerRecord(String(idle.sessionID), session, findingMarkers),
+              );
+            } catch (error) {
+              console.error(`opencode-egm: review ledger: ${describe(error)}`);
+            }
+          }),
+        );
+      }
+
+      return cleanup;
+    } catch (error) {
+      // The server swallows a thrown setup error; log it before it disappears.
+      console.error(`opencode-egm: ${describe(error)}`);
+      await cleanup();
+      throw error;
+    }
   },
 });

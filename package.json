@@ -19,13 +19,17 @@
     "sync": "bun scripts/sync-upstream.mjs",
     "verify": "bun test && bunx tsc --noEmit"
   },
-  "dependencies": {
-    "@opencode/plugin": "2.2.4"
+  "peerDependencies": {
+    "@opencode/plugin": "^2.2.4"
   },
   "devDependencies": {
     "@opencode/client": "2.2.4",
+    "@opencode/plugin": "2.2.4",
     "@types/bun": "1.4.3",
     "@types/node": "^24",
     "typescript": "^5.9.0"
+  },
+  "engines": {
+    "bun": ">=1.2.0"
   }
 }
